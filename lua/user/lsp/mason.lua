@@ -5,8 +5,10 @@ local servers = {
 	-- "tsserver",
 	"pyright",
 	-- "bashls",
-	"jsonls",
+	-- "jsonls",
 	-- "yamlls",
+  "clangd",
+  "rust_analyzer"
 }
 
 local settings = {
