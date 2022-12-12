@@ -105,6 +105,10 @@ return packer.startup(function(use)
             vim.api.nvim_set_keymap("n", "S", ":HopWord<cr>", {silent = true})
         end}
     use { "ojroques/vim-oscyank"}
+	use { "fgheng/winbar.nvim"}
+	use { "SmiteshP/nvim-gps",
+		requires = "nvim-treesitter/nvim-treesitter"
+	}
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
