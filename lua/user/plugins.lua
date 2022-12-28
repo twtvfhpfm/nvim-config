@@ -87,6 +87,7 @@ return packer.startup(function(use)
         },
         config = function()
             require("telescope").load_extension("live_grep_args")
+            require("telescope").load_extension("fzf")
         end
     }
 
@@ -109,6 +110,7 @@ return packer.startup(function(use)
 	use { "SmiteshP/nvim-gps",
 		requires = "nvim-treesitter/nvim-treesitter"
 	}
+	use {'nvim-telescope/telescope-fzf-native.nvim', run = 'make' }
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
