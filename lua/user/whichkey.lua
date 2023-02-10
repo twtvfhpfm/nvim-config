@@ -162,6 +162,7 @@ local mappings = {
   },
   s = {
     name = "Search",
+    s = { "<cmd>lua require(\"telescope\").extensions.live_grep_args.live_grep_args({default_text=vim.fn.expand(\"<cword>\")})<cr>", "Current String"},
     b = { "<cmd>Telescope git_branches<cr>", "Checkout branch" },
     c = { "<cmd>Telescope colorscheme<cr>", "Colorscheme" },
     h = { "<cmd>Telescope help_tags<cr>", "Find Help" },
