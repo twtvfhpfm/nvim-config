@@ -50,3 +50,8 @@ vim.opt.runtimepath:remove("/usr/share/vim/vimfiles")  -- separate vim plugins f
 
 vim.cmd "set list lcs=trail:·,tab:»»"
 vim.cmd "set jumpoptions+=stack"
+vim.api.nvim_create_autocmd({ "BufWritePost" }, {
+  callback = function()
+    require("lint").try_lint()
+  end,
+})
