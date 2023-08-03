@@ -53,6 +53,7 @@ keymap("v", ">", ">gv", opts)
 keymap("v", "<A-j>", ":m .+1<CR>==", opts)
 keymap("v", "<A-k>", ":m .-2<CR>==", opts)
 keymap("v", "p", '"_dP', opts)
+keymap("v", "c", ":OSCYankVisual<CR>", opts)
 
 -- Visual Block --
 -- Move text up and down
