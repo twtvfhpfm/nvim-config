@@ -8,7 +8,6 @@ local servers = {
 	-- "jsonls",
 	-- "yamlls",
   "clangd",
-	"gopls",
   "rust_analyzer"
 }
 

@@ -5,6 +5,7 @@ end
 
 local config_status_ok, nvim_tree_config = pcall(require, "nvim-tree.config")
 if not config_status_ok then
+  nvim_tree.setup()
   return
 end
 

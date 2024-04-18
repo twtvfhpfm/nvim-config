@@ -131,7 +131,7 @@ local mappings = {
   l = {
     name = "LSP",
     a = { "<cmd>lua vim.lsp.buf.code_action()<cr>", "Code Action" },
-    c = { "<cmd>lua vim.lsp.buf.incoming_calls()<cr>", "Incoming Calls"},
+    c = { "<cmd>lua require('telescope.builtin').lsp_incoming_calls()<cr>", "Incoming Calls"},
     d = {
       "<cmd>Telescope diagnostics bufnr=0<cr>",
       "Document Diagnostics",
@@ -154,9 +154,9 @@ local mappings = {
     l = { "<cmd>lua vim.lsp.codelens.run()<cr>", "CodeLens Action" },
     q = { "<cmd>lua vim.diagnostic.setloclist()<cr>", "Quickfix" },
     r = { "<cmd>lua vim.lsp.buf.rename()<cr>", "Rename" },
-    s = { "<cmd>Telescope lsp_document_symbols<cr>", "Document Symbols" },
+    s = { "<cmd>lua require('telescope.builtin').lsp_document_symbols({symbol_width=60})<cr>", "Document Symbols" },
     S = {
-      "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>",
+      "<cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols({symbol_width=60})<cr>",
       "Workspace Symbols",
     },
   },
