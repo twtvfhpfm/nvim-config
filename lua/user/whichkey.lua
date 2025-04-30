@@ -160,6 +160,11 @@ local mappings = {
       "Workspace Symbols",
     },
   },
+    n = {
+        name = "NvimTree",
+        r = {"<cmd>NvimTreeResize 50<cr>", "Resize"},
+        f = {"<cmd>NvimTreeFindFile<cr>", "Find Current File"},
+    },
   s = {
     name = "Search",
     s = { "<cmd>lua require(\"telescope\").extensions.live_grep_args.live_grep_args({default_text=vim.fn.expand(\"<cword>\")})<cr>", "Current String"},
