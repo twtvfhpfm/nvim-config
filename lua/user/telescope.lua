@@ -12,6 +12,10 @@ telescope.setup {
     prompt_prefix = " ",
     selection_caret = " ",
     path_display = { "smart" },
+    layout_config = {
+        width = 0.99,
+        height = 0.99
+    },
 
     mappings = {
       i = {

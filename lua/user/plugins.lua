@@ -46,7 +46,7 @@ return packer.startup(function(use)
   use { "numToStr/Comment.nvim", commit="8d3aa5c22c2d45e788c7a5fe13ad77368b783c20"}
   use { "JoosepAlviste/nvim-ts-context-commentstring", commit="729d83ecb990dc2b30272833c213cc6d49ed5214"}
   use { "kyazdani42/nvim-web-devicons", commit="f1b1cee3a561590a6c1637a9326c406f6e4af914"}
-  use { "kyazdani42/nvim-tree.lua"}--, commit="1d79a64a88af47ddbb55f4805ab537d11d5b908e"}
+  use { "kyazdani42/nvim-tree.lua", commit="64f61e4c913047a045ff90bd188dd3b54ee443cf"}
   use { "akinsho/bufferline.nvim", commit="3677aceb9a72630b0613e56516c8f7151b86f95c"}
 	use { "moll/vim-bbye", commit="25ef93ac5a87526111f43e5110675032dbcacf56"}
   use { "nvim-lualine/lualine.nvim", commit="e99d733e0213ceb8f548ae6551b04ae32e590c80"}
@@ -101,7 +101,7 @@ return packer.startup(function(use)
 	-- Git
 	use { "lewis6991/gitsigns.nvim", commit="b1f9cf7c5c5639c006c937fc1819e09f358210fc"}
     use {"simrat39/rust-tools.nvim", commit="71d2cf67b5ed120a0e31b2c8adb210dd2834242f"}
-    use {"phaazon/hop.nvim", event = "BufRead",
+    use {"phaazon/hop.nvim", event = "BufRead", commit="1a1eceafe54b5081eae4cb91c723abd1d450f34b",
         config = function ()
             require("hop").setup()
             vim.api.nvim_set_keymap("n", "s", ":HopChar2<cr>", {silent = true})
@@ -115,6 +115,7 @@ return packer.startup(function(use)
 	}
 	use {'mfussenegger/nvim-lint', commit="cadebae41e11610ba22a7c95dcf5ebc0f8af8f13"}
 	use {'nvim-telescope/telescope-fzf-native.nvim', commit="580b6c48651cabb63455e97d7e131ed557b8c7e2", run = 'make' }
+    use 'Mr-LLLLL/interestingwords.nvim'
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
