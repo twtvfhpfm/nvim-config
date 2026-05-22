@@ -2,6 +2,7 @@ return {
   "yetone/avante.nvim",
   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
   -- ⚠️ must add this setting! ! !
+  enabled = false,
   build = vim.fn.has("win32") ~= 0
       and "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false"
       or "make",
@@ -82,21 +83,6 @@ return {
           use_absolute_path = true,
         },
       },
-    },
-    {
-      -- Make sure to set this up properly if you have lazy=true
-      'MeanderingProgrammer/render-markdown.nvim',
-      opts = {
-        -- file_types = { "markdown", "Avante" },
-           exclude_filetypes = {
-          "avante",
-          "avante-input",
-          "avante-selected-code",
-          "Avante",
-          "AvanteInput"
-        },
-      },
-      -- ft = { "markdown", "Avante" },
     },
   },
 }
