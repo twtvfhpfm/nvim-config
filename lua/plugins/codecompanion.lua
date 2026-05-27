@@ -1,11 +1,17 @@
 return {
   "olimorris/codecompanion.nvim",
   version = "^19.13.0",
-  opts = {},
+  enabled = true,
+  opts = {
+    extensions = {
+        spinner = {},
+    },
+  },
   dependencies = {
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
     "nvim-treesitter/nvim-treesitter",
+    "franco-ruggeri/codecompanion-spinner.nvim",
     "stevearc/dressing.nvim", -- for input provider dressing
   },
   config = function ()
@@ -18,6 +24,11 @@ return {
               relativenumber = false,
             },
           },
+        },
+        diff = {
+          enabled = true,
+          -- Show all approval diffs in the chat buffer (default is 6 lines)
+          threshold_for_chat = 100000,
         },
       },
       adapters = {
@@ -74,12 +85,38 @@ return {
               description = "Claude CLI (Kitty)",
               provider = "kitty",
             },
+            opencode_agent = {
+              cmd = "/home/xu/.opencode/bin/opencode",
+              args = {},
+              description = "OpenCode CLI (Kitty)",
+              provider = "kitty",
+            },
           },
         },
         chat = {adapter = "cursor_cli", input_ui = "float"},
         inline = {adapter = "deepseek", input_ui = "float"},
         agent = {adapter = "cursor_cli"},
       },
+    })
+
+    -- Chat buffer spinner: three bouncing dots (replaces default braille frames)
+    do
+      local Spinner = require("codecompanion-spinner.spinner")
+      local bounce_frames = { "● · ·", "· ● ·", "· · ●", "· ● ·" }
+      local orig_new = Spinner.new
+      function Spinner.new(self, chat_id, buffer)
+        local inst = orig_new(self, chat_id, buffer)
+        inst.spinner_symbols = bounce_frames
+        return inst
+      end
+    end
+
+    require("codecompanion_acp_diff_chat").setup()
+    require("codecompanion_acp_history").setup()
+
+    local acp_resume = require("codecompanion_acp_resume")
+    vim.keymap.set("n", "<leader>ah", acp_resume.pick_and_resume, {
+      desc = "Resume ACP session from saved history",
     })
 
     -- Neovim :terminal 在窗口反复 resize 时会把 TUI 每次整屏重绘都记入 scrollback；
@@ -92,6 +129,15 @@ return {
     })
     local multi = require("codecompanion_kitty_multi")
     local api = vim.api
+
+    local function ensure_normal_mode()
+      local mode = api.nvim_get_mode().mode
+      if mode:match("^i") then
+        vim.cmd.stopinsert()
+      elseif mode:match("^[vV\22sS]") or mode:match("^R") then
+        api.nvim_feedkeys(api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+      end
+    end
 
     local function send_to_instance(inst, prompt, extra)
       local cli = require("codecompanion.interactions.cli")
@@ -114,11 +160,7 @@ return {
           return
         end
         vim.g.cc_ap_restore_normal = false
-        vim.schedule(function()
-          if vim.api.nvim_get_mode().mode:sub(1, 1) == "i" then
-            vim.cmd.stopinsert()
-          end
-        end)
+        vim.schedule(ensure_normal_mode)
       end,
     })
 
@@ -164,11 +206,7 @@ return {
             })
           end
           -- Prompt closes in insert; if Kitty focus does not grab OS focus, fix now
-          vim.defer_fn(function()
-            if vim.api.nvim_get_mode().mode:match("^i") then
-              vim.cmd.stopinsert()
-            end
-          end, 80)
+          vim.defer_fn(ensure_normal_mode, 80)
         end,
       })
     end
@@ -265,6 +303,108 @@ return {
 
     vim.keymap.set({ "n", "v" }, "<LocalLeader>ap", ap_keymap, { desc = "Prompt the CLI agent" })
 
+    local function aa_keymap()
+      local mode = vim.fn.mode()
+      if mode == "v" or mode == "V" or mode == "\22" then
+        require("codecompanion").add({ range = 1 })
+        -- add() calls ui:open() but that skips focus when chat is already visible
+        vim.schedule(function()
+          local chat = require("codecompanion").last_chat()
+          if chat and chat.bufnr then
+            require("codecompanion").restore(chat.bufnr)
+          end
+          vim.schedule(ensure_normal_mode)
+        end)
+      else
+        require("codecompanion").toggle_chat()
+      end
+    end
+
+    vim.keymap.set({ "n", "v" }, "<leader>aa", aa_keymap, {
+      desc = "Toggle chat / Add selection to chat",
+    })
+
+    local chat_win_sizes = {}
+
+    local function toggle_chat_fullscreen()
+      local chat = require("codecompanion").buf_get_chat(api.nvim_get_current_buf())
+      if not chat or not chat.ui:is_visible() then
+        return
+      end
+
+      local winnr = chat.ui.winnr
+      if not api.nvim_win_is_valid(winnr) then
+        return
+      end
+
+      local window = chat.ui.window_opts
+        and vim.tbl_deep_extend("force", {}, require("codecompanion.config").display.chat.window, chat.ui.window_opts)
+        or vim.deepcopy(require("codecompanion.config").display.chat.window)
+      local layout = window.layout
+      local state = chat_win_sizes[winnr]
+
+      if layout == "float" then
+        local cfg = api.nvim_win_get_config(winnr)
+        if state and state.fullscreen then
+          api.nvim_win_set_config(winnr, vim.tbl_extend("force", cfg, {
+            width = state.width,
+            height = state.height,
+            row = state.row,
+            col = state.col,
+          }))
+          state.fullscreen = false
+        else
+          chat_win_sizes[winnr] = {
+            fullscreen = true,
+            width = cfg.width,
+            height = cfg.height,
+            row = cfg.row,
+            col = cfg.col,
+          }
+          api.nvim_win_set_config(winnr, vim.tbl_extend("force", cfg, {
+            width = vim.o.columns,
+            height = vim.o.lines,
+            row = 0,
+            col = 0,
+          }))
+        end
+      elseif layout == "vertical" then
+        if state and state.fullscreen then
+          api.nvim_win_set_width(winnr, state.width)
+          state.fullscreen = false
+        else
+          chat_win_sizes[winnr] = {
+            fullscreen = true,
+            width = api.nvim_win_get_width(winnr),
+          }
+          vim.cmd("vertical resize " .. vim.o.columns)
+        end
+      elseif layout == "horizontal" then
+        if state and state.fullscreen then
+          api.nvim_win_set_height(winnr, state.height)
+          state.fullscreen = false
+        else
+          chat_win_sizes[winnr] = {
+            fullscreen = true,
+            height = api.nvim_win_get_height(winnr),
+          }
+          vim.cmd("resize " .. (vim.o.lines - vim.o.cmdheight - 1))
+        end
+      else
+        vim.notify("Fullscreen toggle is not supported for layout: " .. layout, vim.log.levels.WARN)
+      end
+    end
+
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "CodeCompanionChatOpened",
+      callback = function(ev)
+        vim.keymap.set("n", "<leader>af", toggle_chat_fullscreen, {
+          buffer = ev.data.bufnr,
+          desc = "Toggle chat window fullscreen",
+        })
+      end,
+    })
+
     vim.keymap.set("n", "<leader>as", function()
       if #multi.prune() == 0 then
         vim.notify("No running Kitty CLI agents", vim.log.levels.WARN)
@@ -279,7 +419,7 @@ return {
     end, { desc = "Switch Kitty CLI agent" })
 
     vim.keymap.set("n", "<leader>an", function()
-      multi.prompt_and_create()
+      multi.select_agent_and_create()
     end, { desc = "New Kitty CLI agent" })
   end
 }

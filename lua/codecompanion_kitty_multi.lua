@@ -80,8 +80,66 @@ function M.register(inst)
   end
 end
 
+---List configured CLI agents (sorted by id)
+---@return { id: string, label: string }[]
+function M.list_agents()
+  local config = require("codecompanion.config")
+  local agents = config.interactions.cli.agents or {}
+  local list = {}
+  for id, spec in pairs(agents) do
+    list[#list + 1] = {
+      id = id,
+      label = spec.description or id,
+    }
+  end
+  table.sort(list, function(a, b)
+    return a.id < b.id
+  end)
+  return list
+end
+
+---Pick a CLI agent from config
+---@param on_done fun(agent_id: string|nil)
+function M.select_agent(on_done)
+  local agents = M.list_agents()
+  if #agents == 0 then
+    vim.notify("No CLI agents configured", vim.log.levels.ERROR)
+    return on_done(nil)
+  end
+  if #agents == 1 then
+    return on_done(agents[1].id)
+  end
+
+  local labels = {}
+  for i, a in ipairs(agents) do
+    labels[i] = a.label
+  end
+
+  vim.ui.select(labels, { prompt = "CLI agent" }, function(choice)
+    if not choice then
+      return on_done(nil)
+    end
+    for _, a in ipairs(agents) do
+      if a.label == choice then
+        return on_done(a.id)
+      end
+    end
+    on_done(nil)
+  end)
+end
+
+---Select CLI agent, then prompt for name and launch Kitty instance
+function M.select_agent_and_create()
+  M.select_agent(function(agent_id)
+    if not agent_id then
+      return
+    end
+    M.prompt_and_create({ agent = agent_id })
+  end)
+end
+
 ---Prompt for a name, then launch a new Kitty CLI agent
----@param opts? { prompt?: string, default?: string, on_done?: fun(inst: CodeCompanion.CLI|nil) }
+---@param opts? { agent?: string, prompt?: string, default?: string, on_done?: fun(inst: CodeCompanion.CLI|nil) }
 function M.prompt_and_create(opts)
   opts = opts or {}
   vim.ui.input({
@@ -98,9 +156,10 @@ function M.prompt_and_create(opts)
     end
 
     local cli_mod = require("codecompanion.interactions.cli")
+    local create_args = opts.agent and { agent = opts.agent } or nil
     -- Apply before create() so Kitty launch --title uses the user's name
     vim.g.codecompanion_kitty_pending_label = name
-    local inst = cli_mod.create()
+    local inst = cli_mod.create(create_args)
     vim.g.codecompanion_kitty_pending_label = nil
     if not inst then
       vim.notify("Failed to create Kitty CLI agent", vim.log.levels.ERROR)

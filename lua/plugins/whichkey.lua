@@ -13,8 +13,6 @@ return {
             -- { "g", mode = { "n", "v" } },
         },
         spec = {
-            { "<leader>a", group = "CodeCompanion"},
-            { "<leader>aa", "<cmd>lua require('codecompanion').toggle()<cr>", desc = "Chat Toggle" },
             {"<leader>b", "<cmd>lua require('telescope.builtin').buffers(require('telescope.themes').get_dropdown{previewer = false})<cr>", desc = "Buffers" },
             { "<leader>e", "<cmd>NvimTreeToggle<cr>", desc = "Explorer" },
             { "<leader>c", "<cmd>Bdelete!<CR>", desc = "Close Buffer" },

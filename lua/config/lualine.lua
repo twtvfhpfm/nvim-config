@@ -7,6 +7,10 @@ local hide_in_width = function()
 	return vim.fn.winwidth(0) > 80
 end
 
+local not_codecompanion = function()
+	return vim.bo.filetype ~= "codecompanion"
+end
+
 local diagnostics = {
 	"diagnostics",
 	sources = { "nvim_diagnostic" },
@@ -15,6 +19,7 @@ local diagnostics = {
 	colored = false,
 	update_in_insert = false,
 	always_visible = true,
+	cond = not_codecompanion,
 }
 
 local diff = {
@@ -37,10 +42,16 @@ local filetype = {
 	icon = nil,
 }
 
+local encoding = {
+	"encoding",
+	cond = not_codecompanion,
+}
+
 local branch = {
 	"branch",
 	icons_enabled = true,
 	icon = "",
+	cond = not_codecompanion,
 }
 
 local location = {
@@ -76,7 +87,16 @@ lualine.setup({
 		lualine_b = { mode },
 		lualine_c = {},
 		-- lualine_x = { "encoding", "fileformat", "filetype" },
-		lualine_x = { diff, spaces, "encoding", filetype },
+		lualine_x = {
+			{
+				"codecompanion_status",
+				padding = { left = 0, right = 1 },
+			},
+			diff,
+			{ spaces, cond = not_codecompanion },
+			encoding,
+			filetype,
+		},
 		lualine_y = { location },
 		lualine_z = { progress },
 	},
