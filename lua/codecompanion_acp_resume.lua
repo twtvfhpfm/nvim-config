@@ -293,6 +293,31 @@ local function truncate(text, max_len)
   return text:sub(1, max_len - 1) .. "…"
 end
 
+---Convert UTC ISO8601 (e.g. 2026-05-28T01:30:18Z) to local time for display.
+---@param iso string|nil
+---@return string|nil
+local function format_saved_at_local(iso)
+  if type(iso) ~= "string" or iso == "" then
+    return iso
+  end
+  local y, mo, d, h, mi, s = iso:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)Z$")
+  if not y then
+    return iso
+  end
+  local ts = os.time({
+    year = tonumber(y),
+    month = tonumber(mo),
+    day = tonumber(d),
+    hour = tonumber(h),
+    min = tonumber(mi),
+    sec = tonumber(s),
+    isdst = false,
+  })
+  local now = os.time()
+  local offset = os.difftime(now, os.time(os.date("!*t", now)))
+  return os.date("%Y-%m-%d %H:%M:%S", ts + offset)
+end
+
 ---@param payload table
 ---@return string
 local function preview_from_payload(payload)
@@ -313,7 +338,8 @@ end
 ---@class CodeCompanionAcpSavedSession
 ---@field session_id string
 ---@field path string
----@field saved_at string|nil
+---@field saved_at string|nil local time display
+---@field saved_at_utc string|nil raw UTC for sorting
 ---@field preview string
 ---@field message_count number
 
@@ -331,10 +357,12 @@ function M.list_saved_sessions()
       local path = vim.fs.joinpath(dir, name)
       local payload = read_json(path) or {}
       local messages = type(payload.messages) == "table" and payload.messages or {}
+      local saved_at_utc = payload.saved_at
       sessions[#sessions + 1] = {
         session_id = payload.session_id or session_id,
         path = path,
-        saved_at = payload.saved_at,
+        saved_at = format_saved_at_local(saved_at_utc),
+        saved_at_utc = saved_at_utc,
         preview = preview_from_payload(payload),
         message_count = #messages,
       }
@@ -342,7 +370,7 @@ function M.list_saved_sessions()
   end
 
   table.sort(sessions, function(a, b)
-    return (a.saved_at or "") > (b.saved_at or "")
+    return (a.saved_at_utc or "") > (b.saved_at_utc or "")
   end)
 
   return sessions

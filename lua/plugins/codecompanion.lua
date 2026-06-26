@@ -35,9 +35,9 @@ return {
         http = {
           deepseek = function()
             return require("codecompanion.adapters").extend("deepseek", {
-              url = "https://ocean-code-cn.tuya-inc.com:7799/v1/chat/completions",
+              url = "https://xxxx",
               env = {
-                api_key = "sk-JLqy1Q646JWirLNds1oKHtYzL4U1X0s710y3-emhtD-aFtNA",
+                api_key = "xxxx",
               },
               schema = {
                 model = {
@@ -113,6 +113,8 @@ return {
 
     require("codecompanion_acp_diff_chat").setup()
     require("codecompanion_acp_history").setup()
+    require("codecompanion_acp_resend").setup()
+    require("codecompanion_acp_model").setup()
 
     local acp_resume = require("codecompanion_acp_resume")
     vim.keymap.set("n", "<leader>ah", acp_resume.pick_and_resume, {

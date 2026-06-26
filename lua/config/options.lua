@@ -73,3 +73,4 @@ function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
 end
 
 vim.diagnostic.config({ virtual_text = true })
+vim.o.foldcolumn = "auto:1"   -- 推荐：有折叠时才占列

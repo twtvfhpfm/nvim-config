@@ -4,6 +4,7 @@ local M = require("lualine.component"):extend()
 M.processing_by_buf = {}
 M.spinner_index = 1
 M._spinner_timer = nil
+M._spinner_last_ms = nil
 
 local SPINNER_MS = 500
 
@@ -53,7 +54,11 @@ end
 
 ---@return string
 local function next_spinner()
-  M.spinner_index = (M.spinner_index % spinner_len) + 1
+  local now = vim.uv.now()
+  if not M._spinner_last_ms or (now - M._spinner_last_ms) >= SPINNER_MS then
+    M.spinner_index = (M.spinner_index % spinner_len) + 1
+    M._spinner_last_ms = now
+  end
   return spinner_frames[M.spinner_index]
 end
 
@@ -136,6 +141,11 @@ function M:update_status()
   end
 
   local model = meta.adapter.model or meta.adapter.name
+  if meta.config_options and meta.config_options.model and meta.config_options.model.name then
+    model = meta.config_options.model.name
+  elseif type(model) == "string" then
+    model = model:match("^([^%[]+)") or model
+  end
   if not model or model == "" then
     return nil
   end
